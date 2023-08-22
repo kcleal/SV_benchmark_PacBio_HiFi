@@ -15,6 +15,8 @@ $(cat > joball.sh << EOF
 
 samtools merge -@8 -o all.bam *mm2.bam; samtools index -@8 all.bam
 
+samtools coverage -r 1 all.bam > all.cov.tsv
+
 dysgu call --mode pacbio --procs 8 -x hs37d5.fa wd_all all.bam -o HG002_all.pacbio.dysgu2.vcf
 
 sniffles --threads 8 --input all.bam --vcf HG002_all.pacbio.sniffles.vcf
