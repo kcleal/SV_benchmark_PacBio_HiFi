@@ -19,6 +19,8 @@ minimap2 -t8 -a -x map-hifi hs37d5.fa SRR103822${i}_subreads.fastq.gz | \
   samtools sort -o SRR103822${i}.mm2.bam -
 samtools index -@8 SRR103822${i}.mm2.bam
 
+samtools coverage -r 1 SRR103822${i}.mm2.bam > SRR103822${i}.cov.tsv
+
 sniffles --threads 8 --input SRR103822${i}.mm2.bam --vcf HG002_${i}.pacbio.sniffles.vcf
 
 dysgu call --mode pacbio --procs 8 --clean hs37d5.fa wd_${i} SRR103822${i}.mm2.bam -o HG002_${i}.pacbio.dysgu.vcf
