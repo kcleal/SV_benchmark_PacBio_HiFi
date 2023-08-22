@@ -24,12 +24,13 @@ for caller in ('sniffles', 'cuteSV', 'delly', 'dysgu', 'NGSEP.vcf_SVsLongReads')
     data.append(d)
 
 df = pd.DataFrame().from_records(data)
-cols = ['caller', 'depth', 'TP', 'FP', 'FN', 'precision', 'recall', 'f1', 'gt_concordance']
+cols = ['caller', 'TP', 'FP', 'FN', 'precision', 'recall', 'f1', 'gt_concordance']
 print('Merged runs:')
 print(df[df['sample'] == 'all'][cols].round(4).to_markdown(index=False))
 print('Single run average:')
 print(df[df['sample'] != 'all'][cols].groupby('caller', sort=False).mean().round(3).to_markdown())
 print('Single runs:')
+cols.append('depth')
 print(df[df['sample'] != 'all'][cols].round(4).to_markdown(index=False))
 
 sns.set_style("whitegrid")
