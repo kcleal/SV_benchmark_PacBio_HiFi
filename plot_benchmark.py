@@ -12,19 +12,19 @@ for caller in ('sniffles', 'cuteSV', 'delly', 'dysgu', 'NGSEP.vcf_SVsLongReads')
         d.update({k: v for k, v in dta.items() if k in ('precision', 'recall', 'f1', 'gt_concordance', 'TP-base', 'FP', 'FN')})
         d['TP'] = d['TP-base']
         del d['TP-base']
+        d['depth'] = pd.read_csv(f'SRR103822{n}.cov.tsv', sep='\t')['meandepth'].iloc[0]
         data.append(d)
-    if not os.path.exists(f'truvari_all_{caller}/summary.json'):
-        continue
     with open(f'truvari_all_{caller}/summary.json', 'r') as f:
          dta = json.load(f)
     d = {'caller': caller.replace('.vcf_SVsLongReads',''), 'sample': 'all', 'TP': None}
     d.update({k: v for k, v in dta.items() if k in ('precision', 'recall', 'f1', 'gt_concordance', 'TP-base', 'FP', 'FN')})
     d['TP'] = d['TP-base']
     del d['TP-base']
+    d['depth'] = pd.read_csv(f'all.cov.tsv', sep='\t')['meandepth'].iloc[0]
     data.append(d)
 
 df = pd.DataFrame().from_records(data)
-cols = ['caller', 'TP', 'FP', 'FN', 'precision', 'recall', 'f1', 'gt_concordance']
+cols = ['caller', 'depth', 'TP', 'FP', 'FN', 'precision', 'recall', 'f1', 'gt_concordance']
 print('Merged runs:')
 print(df[df['sample'] == 'all'][cols].round(4).to_markdown(index=False))
 print('Single run average:')
