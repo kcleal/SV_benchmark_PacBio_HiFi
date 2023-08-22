@@ -1,7 +1,7 @@
 :bar_chart: SV Benchmark using PacBio HiFi data
 ===============================================
 
-This is a reproducible benchmark of structural variant calling using PacBio HiFi reads. The truth set is described in detail here:
+This is a reproducible benchmark of structural variant (SV) callers using PacBio HiFi reads. The truth set is described in detail here:
 
 [A robust benchmark for detection of germline large deletions and insertions. Zook et al., 2020. Nature Biotechnology](https://www.nature.com/articles/s41587-020-0538-8)
 
@@ -27,7 +27,7 @@ Merged runs:
 | NGSEP    | 9300 |  624 |  341 |      0.9371 |   0.9646 | 0.9507 |           0.9682 |
 
 
-Reads were from PacBio Sequel II HiFi. Six runs were tested individually (~7-8X coverage), or after merging together. SV callers tested were as follows:
+Reads were from PacBio Sequel II HiFi. Six runs were tested individually (~8X coverage), or after merging together (~51X coverage). SV callers tested were as follows:
 
 - [sniffles v2.2.0](https://github.com/fritzsedlazeck/Sniffles)
 
@@ -42,7 +42,7 @@ Reads were from PacBio Sequel II HiFi. Six runs were tested individually (~7-8X 
 
 For benchmarking [truvari v4.0.0](https://github.com/ACEnglish/truvari) was used with parameters `-r 1000 --passonly -p 0 --dup-to-ins`
 
-Run the benchmark.sh script or follow along below. 
+Run the ``run_single_sample.sh`` script to map and call SVs for each sequencing run. Wait for that to complete then run the ``run_merged.sh`` script. 
 
 ### Requirements:
 
@@ -113,6 +113,8 @@ minimap2 -t8 -a -x map-hifi hs37d5.fa SRR103822${i}_subreads.fastq.gz | \
   samtools sort -o SRR103822${i}.mm2.bam -
 samtools index -@8 SRR103822${i}.mm2.bam
 
+samtools coverage -r 1 SRR103822${i}.mm2.bam > SRR103822${i}.cov.tsv
+
 sniffles --threads 8 --input SRR103822${i}.mm2.bam --vcf HG002_${i}.pacbio.sniffles.vcf
 
 dysgu call --mode pacbio --procs 8 -x --clean hs37d5.fa wd_${i} SRR103822${i}.mm2.bam -o HG002_${i}.pacbio.dysgu.vcf
@@ -146,6 +148,8 @@ $(cat > joball.sh << EOF
 #SBATCH --cpus-per-task=8
 
 samtools merge -@8 -o all.bam *mm2.bam; samtools index -@8 all.bam
+
+samtools coverage -r 1 all.bam > all.cov.tsv
 
 dysgu call --mode pacbio --procs 8 -x hs37d5.fa wd_all all.bam -o HG002_all.pacbio.dysgu2.vcf
 
