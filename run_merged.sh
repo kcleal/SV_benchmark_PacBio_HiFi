@@ -28,6 +28,9 @@ delly lr -g hs37d5.fa all.bam > HG002_all.pacbio.delly.vcf
 
 java -jar -Xmx64G NGSEPcore_4.3.2.jar SingleSampleVariantsDetector -runOnlySVs -runLongReadSVs -i all.bam -r hs37d5.fa -o HG002_all.pacbio.NGSEP.vcf
 
+svim alignment --sample all --tandem_duplications_as_insertions --interspersed_duplications_as_insertions wd_svim_all all.bam hs37d5.fa
+bcftools view -i 'QUAL >= 10' wd_svim_all/variants.vcf |  bcftools sort -Ov -o HG002_all.pacbio.svim.vcf -
+
 EOF
 )
 
