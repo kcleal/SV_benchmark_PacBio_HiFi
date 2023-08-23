@@ -7,6 +7,7 @@ This is a reproducible benchmark of structural variant (SV) callers using PacBio
 
 
 ![plot](./benchmark_result.png)
+![plot](./benchmark_result_f1.png)
 
 Single run average
 ------------------
@@ -18,6 +19,7 @@ Single run average
 | delly    | 7864.5  | 297     | 1776.5   |       0.964 |    0.816 | 0.883 |            0.911 |
 | dysgu    | 8955.83 | 481.5   |  685.167 |       0.949 |    0.929 | 0.939 |            0.929 |
 | NGSEP    | 8742.5  | 575.833 |  898.5   |       0.938 |    0.907 | 0.922 |            0.926 |
+| svim     | 8838.33 | 726.167 |  802.667 |       0.924 |    0.917 | 0.92  |            0.841 |
 
 Merged runs
 -----------
@@ -28,6 +30,7 @@ Merged runs
 | delly    | 9320 |  625 |  321 |      0.9372 |   0.9667 | 0.9517 |           0.9827 |
 | dysgu    | 9421 |  538 |  220 |      0.946  |   0.9772 | 0.9613 |           0.9728 |
 | NGSEP    | 9300 |  624 |  341 |      0.9371 |   0.9646 | 0.9507 |           0.9682 |
+| svim     | 9346 |  699 |  295 |      0.9304 |   0.9694 | 0.9495 |           0.9766 |
 
 
 Reads were from PacBio Sequel II HiFi. Six runs were tested individually (~8X coverage), or after merging together (~51X coverage). SV callers tested were as follows:
@@ -41,6 +44,8 @@ Reads were from PacBio Sequel II HiFi. Six runs were tested individually (~8X co
 - [dysgu v1.6.0](https://github.com/kcleal/dysgu)
 
 - [NGSEP v4.3.2](https://github.com/NGSEP/NGSEPcore)
+
+- [svim v2.0.0](https://github.com/eldariont/svim)
 
 
 For benchmarking [truvari v4.0.0](https://github.com/ACEnglish/truvari) was used with parameters `-r 1000 --passonly -p 0 --dup-to-ins`
@@ -66,9 +71,9 @@ Note, you may need to set the memory and swap space manually using Docker Deskto
 Install tools:
 
 ```
-mamba create -c bioconda -c conda-forge -n bench python=3.9 awscli samtools=1.17 minimap2=2.26 minimap2 sniffles=2.2.0 cuteSV=2.0.3 truvari=4.0.0 delly=1.1.6 -y
+mamba create -c bioconda -c conda-forge -n bench python=3.9 awscli samtools=1.17 bcftools minimap2=2.26 minimap2 sniffles=2.2.0 cuteSV=2.0.3 truvari=4.0.0 delly=1.1.6 -y
 conda activate bench
-pip install dysgu==1.6.0
+pip install dysgu==1.6.0 svim==2.0.0
 wget https://github.com/NGSEP/NGSEPcore/releases/download/v4.3.2/NGSEPcore_4.3.2.jar
 ```
 
@@ -129,6 +134,9 @@ delly lr -g hs37d5.fa SRR103822${i}.mm2.bam > HG002_${i}.pacbio.delly.vcf
 
 java -jar NGSEPcore_4.3.2.jar SingleSampleVariantsDetector -runOnlySVs -runLongReadSVs -i SRR103822${i}.mm2.bam -r hs37d5.fa -o HG002_${i}.pacbio.NGSEP.vcf
 
+svim alignment --sample SRR103822${i} --tandem_duplications_as_insertions --interspersed_duplications_as_insertions wd_svim_SRR103822${i} SRR103822${i}.mm2.bam hs37d5.fa
+bcftools view -i 'QUAL >= 2' wd_svim_SRR103822${i}/variants.vcf |  bcftools sort -Ov -o HG002_${i}.pacbio.svim.vcf -
+
 EOF
 )
   # change this to 'bash job${i}' if running without slurm
@@ -165,8 +173,13 @@ delly lr -g hs37d5.fa all.bam > HG002_all.pacbio.delly.vcf
 
 java -jar -Xmx64G NGSEPcore_4.3.2.jar SingleSampleVariantsDetector -runOnlySVs -runLongReadSVs -i all.bam -r hs37d5.fa -o HG002_all.pacbio.NGSEP.vcf
 
+svim alignment --sample all --tandem_duplications_as_insertions --interspersed_duplications_as_insertions wd_svim_all all.bam hs37d5.fa
+bcftools view -i 'QUAL >= 10' wd_svim_all/variants.vcf |  bcftools sort -Ov -o HG002_all.pacbio.svim.vcf -
+
 EOF
 )
+# run 'bash joball.sh' if running without slurm
+sbatch joball.sh
 ```
 
 
@@ -174,7 +187,7 @@ EOF
 
 Run truvari:
 ```
-callers=( "sniffles" "cuteSV" "dysgu" "delly" "NGSEP.vcf_SVsLongReads" )
+callers=( "sniffles" "cuteSV" "dysgu" "delly" "NGSEP.vcf_SVsLongReads" "svim" )
 
 for i in {44..49}
 do
@@ -211,7 +224,6 @@ Run the plotting script:
 
 Individual samples
 ------------------
-
 | caller   |   TP |   FP |   FN |   precision |   recall |     f1 |   gt_concordance |   depth |
 |:---------|-----:|-----:|-----:|------------:|---------:|-------:|-----------------:|--------:|
 | sniffles | 8569 |  556 | 1072 |      0.9391 |   0.8888 | 0.9132 |           0.9309 |  7.6135 |
@@ -244,7 +256,9 @@ Individual samples
 | NGSEP    | 8827 |  579 |  814 |      0.9384 |   0.9156 | 0.9269 |           0.9291 |  8.8387 |
 | NGSEP    | 8837 |  582 |  804 |      0.9382 |   0.9166 | 0.9273 |           0.9338 |  9.2231 |
 | NGSEP    | 8809 |  582 |  832 |      0.938  |   0.9137 | 0.9257 |           0.9306 |  9.0572 |
-
-
-
-
+| svim     | 8754 |  678 |  887 |      0.9281 |   0.908  | 0.9179 |           0.8133 |  7.6135 |
+| svim     | 8754 |  720 |  887 |      0.924  |   0.908  | 0.9159 |           0.8284 |  8.0543 |
+| svim     | 8784 |  720 |  857 |      0.9242 |   0.9111 | 0.9176 |           0.834  |  8.4205 |
+| svim     | 8925 |  721 |  716 |      0.9253 |   0.9257 | 0.9255 |           0.8491 |  8.8387 |
+| svim     | 8930 |  773 |  711 |      0.9203 |   0.9263 | 0.9233 |           0.8615 |  9.2231 |
+| svim     | 8883 |  745 |  758 |      0.9226 |   0.9214 | 0.922  |           0.8584 |  9.0572 |
