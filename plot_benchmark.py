@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 data = []
-for caller in ('sniffles', 'cuteSV', 'delly', 'dysgu', 'NGSEP.vcf_SVsLongReads'):
-    for n in range(44, 50):
+for caller in ('sniffles', 'cuteSV', 'delly', 'dysgu', 'NGSEP.vcf_SVsLongReads', 'svim'):
+    for n in range(44, 50): 
         with open(f'truvari_{n}_{caller}/summary.json', 'r') as f:
             dta = json.load(f)
         d = {'caller': caller.replace('.vcf_SVsLongReads',''), 'sample': n, 'TP': None}
@@ -34,10 +34,16 @@ cols.append('depth')
 print(df[df['sample'] != 'all'][cols].round(4).to_markdown(index=False))
 
 sns.set_style("whitegrid")
-plt.figure(figsize=(7, 4))
-plt.subplots_adjust(right=0.8)
+plt.figure(figsize=(8, 4))
+plt.subplots_adjust(right=0.75)
 ax = sns.scatterplot(df, x="recall", y="precision", hue="caller", style="sample", s=100)
-sns.move_legend(ax, "upper left", bbox_to_anchor=(1, 1))
-plt.xlim(0.75, 1); plt.ylim(0.92, 0.98)
+ax.legend(bbox_to_anchor=(1.03, 0.5), loc='center left')
 plt.savefig("benchmark_result.png")
+
+plt.figure(figsize=(8, 4))
+plt.subplots_adjust(right=0.75)
+ax = sns.scatterplot(df[df['sample'] != 'all'], x="depth", y="f1", hue="caller", style="sample", s=100)
+ax.legend(bbox_to_anchor=(1.03, 0.5), loc='center left')
+plt.ylim(0.86, 0.96)
+plt.savefig("benchmark_result_f1.png")
 plt.show()
