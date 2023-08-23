@@ -32,6 +32,9 @@ delly lr -g hs37d5.fa SRR103822${i}.mm2.bam > HG002_${i}.pacbio.delly.vcf
 
 java -jar NGSEPcore_4.3.2.jar SingleSampleVariantsDetector -runOnlySVs -runLongReadSVs -i SRR103822${i}.mm2.bam -r hs37d5.fa -o HG002_${i}.pacbio.NGSEP.vcf
 
+svim alignment --sample SRR103822${i} --tandem_duplications_as_insertions --interspersed_duplications_as_insertions wd_svim_SRR103822${i} SRR103822${i}.mm2.bam hs37d5.fa
+bcftools view -i 'QUAL >= 2' wd_svim_SRR103822${i}/variants.vcf |  bcftools sort -Ov -o HG002_${i}.pacbio.svim.vcf -
+
 EOF
 )
   # change this to 'bash job${i}' if running without slurm
