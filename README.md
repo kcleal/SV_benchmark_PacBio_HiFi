@@ -71,7 +71,7 @@ Note, you may need to set the memory and swap space manually using Docker Deskto
 Install tools:
 
 ```
-mamba create -c bioconda -c conda-forge -n bench python=3.9 awscli samtools=1.17 bcftools minimap2=2.26 minimap2 sniffles=2.2.0 cuteSV=2.0.3 truvari=4.0.0 delly=1.1.6 -y
+mamba create -c bioconda -c conda-forge -n bench python=3.9 awscli samtools=1.17 bcftools minimap2=2.26 sniffles=2.2.0 cuteSV=2.0.3 truvari=4.0.0 delly=1.1.6 -y
 conda activate bench
 pip install dysgu==1.6.0 svim==2.0.0
 wget https://github.com/NGSEP/NGSEPcore/releases/download/v4.3.2/NGSEPcore_4.3.2.jar
